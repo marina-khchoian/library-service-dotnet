@@ -2,5 +2,7 @@
 {
     public enum Role
     {
+        Reader,
+        Librarian
     }
 }
