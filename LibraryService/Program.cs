@@ -1,12 +1,34 @@
 using LibraryService.Data;
+using LibraryService.DTOs.Common;
 using LibraryService.Exceptions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.AspNetCore.Mvc;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            Dictionary<string, string[]> errors = context.ModelState
+                                    .Where(e => e.Value?.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+
+            var response = new ErrorResponse
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Message = "Validation failed",
+                Errors = errors
+            };
+            return new BadRequestObjectResult(response);
+        };
+    });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
