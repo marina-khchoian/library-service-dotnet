@@ -22,11 +22,11 @@ namespace LibraryService.Exceptions
                         Status = http.Response.StatusCode,
                         Message = notFoundException.Message
                     }, cancellationToken: ct);
-                    
+
                     return true;
 
 
-                    case BusinessRuleException businessRuleException:
+                case BusinessRuleException businessRuleException:
                     http.Response.StatusCode = StatusCodes.Status400BadRequest;
                     await http.Response.WriteAsJsonAsync(new ErrorResponse
                     {
@@ -36,12 +36,29 @@ namespace LibraryService.Exceptions
 
                     return true;
 
-                    case ForbiddenException forbiddenException:
+                case ForbiddenException forbiddenException:
                     http.Response.StatusCode = StatusCodes.Status403Forbidden;
                     await http.Response.WriteAsJsonAsync(new ErrorResponse
                     {
                         Status = http.Response.StatusCode,
                         Message = forbiddenException.Message
+                    }, cancellationToken: ct);
+                    return true;
+                case ConflictException conflictException:
+                    http.Response.StatusCode = StatusCodes.Status409Conflict;
+                    await http.Response.WriteAsJsonAsync(new ErrorResponse
+                    {
+                        Status = http.Response.StatusCode,
+                        Message = conflictException.Message
+                    }, cancellationToken: ct);
+                    return true;
+
+                case UnauthorizedException unauthorizedException:
+                    http.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await http.Response.WriteAsJsonAsync(new ErrorResponse
+                    {
+                        Status = http.Response.StatusCode,
+                        Message = unauthorizedException.Message
                     }, cancellationToken: ct);
                     return true;
 
