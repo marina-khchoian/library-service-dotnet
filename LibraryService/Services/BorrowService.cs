@@ -32,7 +32,12 @@ namespace LibraryService.Services
                 .AnyAsync(c => c.UserId == userId && c.ExpiresAt > now);
             if (!hasActiveCard)
                 throw new BusinessRuleException("You need an active library card to borrow books.");
-
+            // ბონუსი: გადაუხდელი ჯარიმის მქონე მკითხველს წიგნის აღება ეკრძალება
+            var finesCandidates = await _context.BorrowRecords
+                .Where(r => r.UserId == userId && r.FinePaidAt == null && r.DueDate < now)
+                .ToListAsync();
+            if (finesCandidates.Any(FineCalculator.HasUnpaidFine))
+                throw new BusinessRuleException("You have an unpaid fine. Please pay it before borrowing new books.");
             var book = await _context.Books.FindAsync(request.BookId);
             if (book == null)
                 throw new NotFoundException("Book not found");
@@ -152,6 +157,26 @@ namespace LibraryService.Services
                 Page = page,
                 PageSize = pageSize
             };
+        }
+        public async Task<BorrowDto> PayFineAsync(int borrowId)
+        {
+            var record = await _context.BorrowRecords.FindAsync(borrowId);
+            if (record == null)
+                throw new NotFoundException("Borrow record not found");
+
+            if (record.ReturnedAt == null)
+                throw new BusinessRuleException("The book must be returned before the fine can be paid.");
+
+            if (record.FinePaidAt != null)
+                throw new BusinessRuleException("This fine has already been paid.");
+
+            if (FineCalculator.Fine(record) <= 0)
+                throw new BusinessRuleException("This borrow has no fine.");
+
+            record.FinePaidAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return await GetDtoAsync(record.Id);
         }
     }
 }

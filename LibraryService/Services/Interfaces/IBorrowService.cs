@@ -9,5 +9,6 @@ namespace LibraryService.Services.Interfaces
         Task<BorrowDto> ReturnAsync(int userId, int borrowId);
         Task<PagedResult<BorrowDto>> GetMyBorrowsAsync(int userId, MyBorrowsQueryParameters query);
         Task<PagedResult<BorrowDto>> GetAllAsync(BorrowQueryParameters query);
+        Task<BorrowDto> PayFineAsync(int borrowId);
     }
 }

@@ -12,5 +12,7 @@
         public DateTime? ReturnedAt { get; set; }
         public bool IsOverdue { get; set; }
         public int DaysOverdue { get; set; }
+        public decimal FineAmount { get; set; }
+        public bool FinePaid { get; set; }
     }
 }

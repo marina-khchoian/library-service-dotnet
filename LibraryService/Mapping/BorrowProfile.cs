@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using LibraryService.DTOs.Borrows;
+using LibraryService.Services;
 using LibraryService.Entities;
 
 namespace LibraryService.Mapping
@@ -18,7 +19,9 @@ namespace LibraryService.Mapping
                 .ForMember(d => d.DaysOverdue,
                     o => o.MapFrom(s => s.ReturnedAt == null && s.DueDate < DateTime.UtcNow
                         ? (int)(DateTime.UtcNow - s.DueDate).TotalDays
-                        : 0));
+                        : 0))
+            .ForMember(d => d.FineAmount, o => o.MapFrom(s => FineCalculator.Fine(s)))
+.ForMember(d => d.FinePaid, o => o.MapFrom(s => s.FinePaidAt != null));
         }
     }
 }

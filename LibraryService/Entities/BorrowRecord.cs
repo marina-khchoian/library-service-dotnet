@@ -7,6 +7,7 @@
         public int BookId { get; set; }
         public User User { get; set; } = null!;
         public Book Book { get; set; } = null!;
+        public DateTime? FinePaidAt { get; set; }  
         public DateTime BorrowedAt { get; set; } = DateTime.UtcNow;
         public DateTime DueDate { get; set; } = DateTime.UtcNow;
         public DateTime? ReturnedAt { get; set; }

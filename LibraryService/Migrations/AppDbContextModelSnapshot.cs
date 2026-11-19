@@ -17,7 +17,7 @@ namespace LibraryService.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.33")
+                .HasAnnotation("ProductVersion", "8.0.34")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -123,6 +123,9 @@ namespace LibraryService.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FinePaidAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ReturnedAt")
