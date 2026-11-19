@@ -1,7 +1,9 @@
 using FluentValidation;
 using LibraryService.Data;
+using LibraryService.Data.Seed;
 using LibraryService.DTOs.Common;
 using LibraryService.Exceptions;
+using LibraryService.Filters;
 using LibraryService.Services;
 using LibraryService.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,7 +13,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.Text;
-using LibraryService.Filters;
 using System.Text.Json.Serialization;
 
 
@@ -94,6 +95,12 @@ builder.Services.AddScoped<IBorrowService, BorrowService>();
 builder.Services.AddAutoMapper(cfg => { }, typeof(Program).Assembly);
 
 var app = builder.Build();
+// საწყისი მონაცემები: ბაზა ცარიელია → ვავსებთ, უკვე სავსეა → არაფერს ვაკეთებთ
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DbSeeder.SeedAsync(db);
+}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
