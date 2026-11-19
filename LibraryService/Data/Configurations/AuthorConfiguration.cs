@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using LibraryService.Entities;
-
 namespace LibraryService.Data.Configurations
 {
     public class AuthorConfiguration : IEntityTypeConfiguration<Author>
