@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 using LibraryService.DTOs.Auth;
-using FluentValidation.AspNetCore;
+
 
 namespace LibraryService.Validators
 {
