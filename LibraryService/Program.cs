@@ -89,6 +89,7 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<ILibraryCardService, LibraryCardService>();
 builder.Services.AddAutoMapper(cfg => { }, typeof(Program).Assembly);
 
 var app = builder.Build();
