@@ -80,7 +80,58 @@ Swagger: **http://localhost:5198/swagger**
 | **Reader** | საკუთარი ბარათის გახსნა; წიგნების ძებნა; წიგნის აღება და დაბრუნება; საკუთარი გაცემების ისტორია |
 
 ---
+## ავტორიზაცია (JWT)
 
+### როგორ მუშაობს
+1. `POST /api/auth/register`: პაროლი BCrypt-ით ჰეშირდება და მომხმარებელი ბაზაში ინახება.
+2. `POST /api/auth/login`: BCrypt ამოწმებს პაროლს ჰეშთან. სწორი პაროლის შემთხვევაში `JwtTokenService` ქმნის ტოკენს.
+3. კლიენტი ყოველ დაცულ მოთხოვნაზე აგზავნის header-ს `Authorization: Bearer <token>`.
+4. `JwtBearer` middleware ამოწმებს ხელმოწერას, issuer-ს, audience-ს და ვადას, მერე ტოკენიდან აწყობს `User`-ს (claims).
+5. `[Authorize]` და `[Authorize(Roles = "...")]` წყვეტენ, აქვს თუ არა მომხმარებელს წვდომა.
+
+### Login-ის პასუხი
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "expiresAt": "2026-11-20T03:15:00Z"
+}
+```
+
+### ტოკენის შიგთავსი (claims)
+| Claim | მნიშვნელობა |
+|---|---|
+| `sub` | მომხმარებლის Id |
+| `email` | ელფოსტა |
+| `role` | `Reader` ან `Librarian` |
+| `exp` | ვადის გასვლის დრო (გაცემიდან 8 საათი) |
+
+ტოკენი ხელმოწერილია **HMAC-SHA256** ალგორითმით. მისი შიგთავსი ნებისმიერს შეუძლია წაიკითხოს (მაგ. jwt.io-ზე), მაგრამ შეცვლა გასაღების გარეშე შეუძლებელია, რადგან შეცვლილ ტოკენზე ხელმოწერა აღარ ემთხვევა.
+
+### კონფიგურაცია
+`appsettings.json`:
+```json
+"Jwt": {
+  "Key": "მინიმუმ 32 სიმბოლო",
+  "Issuer": "LibraryService",
+  "Audience": "LibraryServiceClients"
+}
+```
+გასაღები კოდში ჰარდკოდით არ წერია, ყველგან `IConfiguration`-იდან იკითხება (`Program.cs` და `JwtTokenService`).
+
+`Program.cs`-ში ვალიდაცია:
+- `ValidateIssuer` / `ValidateAudience`: ტოკენი სწორედ ამ API-მ გასცა და ამ API-სთვისაა;
+- `ValidateLifetime`: ვადაგასული ტოკენი უარიყოფა;
+- `ValidateIssuerSigningKey`: ხელმოწერა მოწმდება `Jwt:Key`-ით.
+
+### 401 და 403
+| სიტუაცია | სტატუსი |
+|---|---|
+| ტოკენი არ არის, ვადაგასულია ან ხელმოწერა არასწორია | **401** Unauthorized |
+| ტოკენი სწორია, მაგრამ როლი არ ემთხვევა (მაგ. Reader → `POST /api/books`) | **403** Forbidden |
+| სხვისი რესურსი (მაგ. სხვისი გაცემის დაბრუნება), შემოწმება სერვისში | **403** Forbidden |
+
+### მიმდინარე მომხმარებელი
+კონტროლერები UserId-ს ტოკენიდან იღებენ `User.GetUserId()`-ით (`Extensions/ClaimsPrincipalExtensions.cs`) და სერვისს პარამეტრად გადასცემენ. ownership-ის შემოწმება (`record.UserId != userId` → 403) სერვისის დონეზე ხდება.
 ## ER დიაგრამა
 
 ```mermaid
