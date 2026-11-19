@@ -1,5 +1,4 @@
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using LibraryService.Data;
 using LibraryService.DTOs.Common;
 using LibraryService.Exceptions;
@@ -10,15 +9,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-using System.Net.NetworkInformation;
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.Text;
+using LibraryService.Filters;
+using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+{
+    // FluentValidation-ის Validator-ები ყოველ action-ზე ავტომატურად ეშვება
+    options.Filters.Add<ValidationFilter>();
+})
+    .AddJsonOptions(options =>
+    {
+        // Role ტექსტად: "Librarian" და არა 1
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    })
     .ConfigureApiBehaviorOptions(options =>
     {
         options.InvalidModelStateResponseFactory = context =>
@@ -64,7 +73,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(o=> o.TokenValidationParameters = new TokenValidationParameters
+    .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
@@ -77,7 +86,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddFluentValidationAutoValidation();
-//builder.Services.AddAutoMapper(typeof(Program).Assembly);
+builder.Services.AddScoped<IGenreService, GenreService>();
+builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddAutoMapper(cfg => { }, typeof(Program).Assembly);
+
 var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
